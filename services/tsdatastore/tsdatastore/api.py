@@ -31,7 +31,7 @@ class Metrics(Resource):
     '''
     def __init__(self):
         host = getenv('DBHOST', "localhost")
-        port = getenv('DBPORT', 8083)
+        port = int(getenv('DBPORT', 8083))
         self.db = db(host, port)
 
     def put(self, name):
@@ -63,9 +63,9 @@ class Metrics(Resource):
             t += data['interval']
         # TODO: Proper error handling
         if self.db.post(p.as_dict()):
-            print("Ok.")
+            return None, 204
         else:
-            print("Error")
+            return None, 400
 
     def get(self, name):
         '''
