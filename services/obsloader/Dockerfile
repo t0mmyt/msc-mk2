@@ -1,0 +1,16 @@
+FROM ubuntu:16.04
+MAINTAINER Tom Taylor <tom+dockerfiles@tomm.yt>
+
+EXPOSE 8000
+
+RUN apt-get -qq update &&\
+    DEBIAN_FRONTEND=noninteractive apt-get -yqq install \
+      python3 python3-pip python3-numpy python3-scipy \
+      python3-matplotlib python3-lxml python3-sqlalchemy python3-iso8601 &&\
+    pip3 install flup6 flask flask_restful requests obspy gevent
+
+COPY obsloader /obsloader
+COPY run.py setup.py app.fcgi lighttpd.conf /
+RUN python3 setup.py install
+
+ENTRYPOINT ["/run.py"]
