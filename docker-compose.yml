@@ -6,22 +6,24 @@ services:
   cassandra:
     image: t0mmyt/cassandra
     ports:
-      - 9042:9042
-      - 9160:9160
+      - 127.0.0.1:9042:9042
+      - 127.0.0.1:9160:9160
+    volumes:
+      - ./data/cassandra:/opt/apache-cassandra-3.9/data
 
   kairosdb:
     image: t0mmyt/kairosdb
     depends_on:
       - cassandra
     ports:
-      - 8083:8080
+      - 127.0.0.1:8083:8080
 
   tsdatastore:
     image: seismic/tsdatastore
     depends_on:
       - kairosdb
     ports:
-      - 8003:8000
+      - 127.0.0.1:8003:8000
     environment:
       - DBHOST=kairosdb
       - DBPORT=8080
@@ -31,7 +33,7 @@ services:
     depends_on:
       - tsdatastore
     ports:
-      - 8002:8000
+      - 127.0.0.1:8002:8000
     environment:
       - DSHOST=tsdatastore
       - DSPORT=8000
