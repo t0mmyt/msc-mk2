@@ -54,11 +54,17 @@ class KairosDB(object):
                 }
             ]
         }
+        # TODO - try/except
         r = requests.post(
             url="http://{}:{}/api/v1/datapoints/query".format(self.host, self.port),
             json=q
         )
-        return r.json()
+        results = r.json()
+        return {
+            'metric': results['queries'][0]['results'][0]['name'],
+            'tags': {k: v[0] for k, v in results['queries'][0]['results'][0]['tags']},
+            'results': results['queries'][0]['results'][0]['values']
+        }
 
 
 class KairosDBPayload(object):

@@ -9,7 +9,7 @@ RUN apt-get -qq update &&\
     pip3 install flup6 flask flask_restful requests gevent
 
 COPY tsdatastore /tsdatastore
-COPY run.py setup.py app.fcgi lighttpd.conf /
+COPY run.py setup.py /
 RUN python3 setup.py install
 
 ENTRYPOINT ["/run.py"]
