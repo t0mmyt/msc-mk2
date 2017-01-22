@@ -16,7 +16,7 @@ class Importer(object):
         return status
 
     def _upload(self, data):
-        # TODO try/except
+        # TODO try/except ConnectionError
         r = requests.put(
             url=self.url,
             headers={'Content-Type': "application/octet"},
