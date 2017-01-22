@@ -5,11 +5,23 @@ import obspy
 from iso8601 import parse_date
 from logging import debug, info
 
+
+class ObservationError(Exception):
+    """
+    Exception to contain all errors relating to loading the observations
+    """
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
+
 class Observation(object):
     def __init__(self, path):
         try:
             self.stream = obspy.core.stream.read(path)
-        except (IOError) as e:
+        except (IOError, TypeError) as e:
             raise ObservationError('Failed to read {}: {}'.format(path, e))
 
     @property

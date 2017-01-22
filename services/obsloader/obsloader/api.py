@@ -6,7 +6,7 @@ from os import getenv
 import requests
 from flask import Flask, jsonify, request
 from flask_restful import Resource, Api, reqparse
-from obsloader.obs import Observation
+from obsloader.obs import Observation, ObservationError
 
 
 class InvalidUsage(Exception):
@@ -45,14 +45,17 @@ class Observations(Resource):
 
         Expects raw SAC files
         '''
-        data = BytesIO(request.get_data())
-        o = Observation(path=data)
-        r = requests.put(
-            url="{}/{}".format(self.ds_url, o.stats().channel),
-            json=o.as_tsdatastore_payload()
-        )
-        print(r.status_code)
-        return None, 204
+        try:
+            data = BytesIO(request.get_data())
+            o = Observation(path=data)
+            r = requests.put(
+                url="{}/{}".format(self.ds_url, o.stats().channel),
+                json=o.as_tsdatastore_payload()
+            )
+            return None, r.status_code
+        except ObservationError as e:
+            print(e)
+            return None, 400
 
 
 app = Flask(__name__)
