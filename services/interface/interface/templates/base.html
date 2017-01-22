@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{% block title %}{% endblock %} - Seismic</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
+  <style>
+  html, body {
+    overflow-x: hidden;
+  }
+  .raleway {
+    font-family: 'Raleway', serif;
+  }
+  .full-height {
+    height: 100vmax;
+  }
+  .full-width {
+    width: 100%;
+  }
+  .main-menu {
+    background-color: #000000;
+    color: #ffffff;
+    min-width: 200px;
+    max-width: 300px;
+    font-family: "raleway", sans-serif;
+    font-size: 12pt;
+  }
+  .controls {
+    min-width: 200px;
+    max-width: 300px;
+    background-color: #e2eef9;
+    padding-left: 5px;
+    padding-top: 5px;
+  }
+  .success {
+    border: 1px solid #77ff77;
+    background-color: #77ff77;
+  }
+  .failure {
+    border: 1px solid #ff7777;
+    background-color: #ff7777;
+  }
+  </style>
+</head>
+<body>
+  <div class="full-height" style="display: table">
+    <div style="display: table-row">
+      <div class="main-menu" style="display: table-cell">
+        <h2 style="text-align: center">Seismic</h2>
+        {{ nav|safe }}
+      </div>
+      <div class="container raleway" style="display: table-cell">
+        <h1>{% block heading %}{% endblock %}</h1>
+        {% block contents %}{% endblock %}
+      </div>
+    </div>
+  </div>
+</body>
+</html>
