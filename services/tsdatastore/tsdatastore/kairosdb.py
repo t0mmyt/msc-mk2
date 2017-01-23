@@ -62,7 +62,7 @@ class KairosDB(object):
         results = r.json()
         return {
             'metric': results['queries'][0]['results'][0]['name'],
-            'tags': {k: v[0] for k, v in results['queries'][0]['results'][0]['tags']},
+            'tags': {k: v[0] for k, v in results['queries'][0]['results'][0]['tags'].items()},
             'results': results['queries'][0]['results'][0]['values']
         }
 
