@@ -3,7 +3,9 @@ Main Web Interface
 '''
 import os
 import json
-from flask import Flask, render_template, abort, request
+import requests
+from requests import ConnectionError
+from flask import Flask, render_template, abort, request, jsonify
 from jinja2 import TemplateNotFound
 from nav import SimpleNavigator
 from importer import Importer
@@ -67,6 +69,20 @@ def render_sax():
     except TemplateNotFound:
         abort(404)
 
+@app.route("/raw_json/<channel>")
+def raw_json(channel):
+    try:
+        r = requests.get(
+            "{}/v1/metrics/{}".format(TSDATASTORE, channel),
+            params = request.args
+        )
+        if r.status_code != 200:
+            abort(r.status_code)
+        return jsonify(r.json())
+    except ConnectionError:
+        abort(503)
+
 
 if __name__ == "__main__":
+    TSDATASTORE = os.getenv('TSDATASTORE', "http://localhost:8003")
     app.run(debug=True)
