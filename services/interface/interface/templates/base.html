@@ -4,6 +4,7 @@
   <title>{% block title %}{% endblock %} - Seismic</title>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
+  {% block head %}{% endblock %}
   <style>
   html, body {
     overflow-x: hidden;
@@ -50,7 +51,7 @@
         <h2 style="text-align: center">Seismic</h2>
         {{ nav|safe }}
       </div>
-      <div class="container raleway" style="display: table-cell">
+      <div class="container raleway" style="display: table-cell" id="contents">
         <h1>{% block heading %}{% endblock %}</h1>
         {% block contents %}{% endblock %}
       </div>
