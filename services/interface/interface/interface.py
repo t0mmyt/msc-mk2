@@ -7,8 +7,8 @@ import requests
 from requests import ConnectionError
 from flask import Flask, render_template, abort, request, jsonify
 from jinja2 import TemplateNotFound
-from nav import SimpleNavigator
-from importer import Importer
+from interface.nav import SimpleNavigator
+from interface.importer import Importer
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
