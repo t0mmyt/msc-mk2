@@ -155,7 +155,7 @@ s.selectAll("*").remove()
 <script>
 var watchClicksOn = ['network', 'station', 'channel'];
 watchClicksOn.forEach(function(i) {
-  $("#" + i).on("click", function() {
+  $("#" + i).on("change", function() {
     console.log($("#" + i).attr("name") + " " + $("#" + i).val());
     updatedVals();
   })});
