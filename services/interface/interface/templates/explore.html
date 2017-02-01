@@ -1,11 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Explore{% endblock %}
 {% block heading %}Explore Data{% endblock %}
+{% block explain %}View raw data as it was recorded with no processing{% endblock %}
 {% block head %}
 <!-- TODO - Move this to footer? -->
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.4.3/d3.min.js"></script>
-{% endblock %}
-{% block contents %}
 <style>
 svg .line {
   fill: none;
@@ -15,7 +14,15 @@ svg .line {
 .bad {
   color: red;
 }
+.axis {
+  stroke: white;
+  stroke-width: 2px;
+  fill: black;
+  paint-order: stroke;
+}
 </style>
+{% endblock %}
+{% block contents %}
 <div class="row">
 	<div class="col-lg-12" id="render"></div>
 </div>
@@ -55,9 +62,9 @@ svg .line {
       <input type="text" id="enddate" name="enddate" placeholder="YYYY/MM/DD" value="">
     </div>
     <div class="col-lg-2 form-group">
-      <label for="starttime">Start Time</label><br>
+      <label for="starttime">Start Time (UTC)</label><br>
       <input type="text" id="starttime" name="starttime" placeholder="HH:MM:SS" value=""><br>
-      <label for="endtime">End Time</label><br>
+      <label for="endtime">End Time (UTC)</label><br>
       <input type="text" id="endtime" name="endtime" placeholder="HH:MM:SS" value="">
     </div>
     <div class="col-lg-2 form-group">
@@ -115,7 +122,11 @@ function render(svg, dataset) {
   console.timeEnd("Render");
 
   svg.append("g")
-  .call(yAxis);
+      .call(yAxis)
+      .selectAll("text")
+        .attr("class", "axis")
+        .attr("vector-effect", "non-scaling-stroke")
+;
   svg.append("g")
       .call(xAxis)
       .attr('transform', 'translate(0,' + (yScale(0)) + ')')
@@ -140,65 +151,66 @@ var h = 400;
 var padding = 20;
 
 var s = svg("#render", w, h)
-console.time("Fetching data")
-data = d3.json("http://localhost:8003/v1/metrics/Z?start=131550700000&end=1315493280000&station=NAB1&network=YW",
-  function(d) {
-    r = d.results;
-    console.timeEnd("Fetching data")
-    console.log("Rendering " + r.length + "points.")
-    render(s, r);
-  }
-);
 
 s.selectAll("*").remove()
 </script>
 <script>
-var watchClicksOn = ['network', 'station', 'channel'];
-watchClicksOn.forEach(function(i) {
-  $("#" + i).on("change", function() {
-    console.log($("#" + i).attr("name") + " " + $("#" + i).val());
-    updatedVals();
-  })});
 
-['startdate', 'enddate'].forEach(function(i) {
-  $("#" + i).on("input", function() {
-    if (/^\d{4}\/\d{2}\/\d{2}$/.test($("#" + i).val())) {
-      $("label[for='" + i + "']").removeAttr("class", "bad");
-      updatedVals();
-    } else {
-      $("label[for='" + i + "']").attr("class", "bad");
-    }
-})});
+['network', 'station', 'channel'].forEach(
+  function(i) { $("#" + i).on("change", function() {updatedVals()}); }
+);
 
-['starttime', 'endtime'].forEach(function(i) {
-  $("#" + i).on("input", function() {
-    if (/^\d{2}:\d{2}:\d{2}$/.test($("#" + i).val())) {
-      $("label[for='" + i + "']").removeAttr("class", "bad");
-      updatedVals();
-    } else {
-      $("label[for='" + i + "']").attr("class", "bad");
-    }
-})});
+['startdate', 'enddate', 'starttime', 'endtime'].forEach(
+  function(i) { $("#" + i).on("input", function() {updatedVals()}); }
+)
 
 function updatedVals() {
-  var channel = $("#channel").val();
-  var params = {
-    "network": $("#network").val(),
-    "station": $("#station").val(),
-    "start": Date.parse($("#startdate").val() + " " + $("#starttime").val()),
-    "end": Date.parse($("#enddate").val() + " " + $("#endtime").val())
-  };
-  var queryUrl = "http://localhost:8003/v1/metrics/" + channel + "?" + jQuery.param(params);
-  console.log(queryUrl);
-  data = d3.json(queryUrl,
-    function(d) {
-      r = d.results;
-      console.timeEnd("Fetching data")
-      console.log("Rendering " + r.length + "points.")
-      s.selectAll("*").remove();
-      render(s, r);
+  var ok = true;
+  ['startdate', 'enddate'].forEach(
+    function(i) {
+      if (/^\d{4}\/\d{2}\/\d{2}$/.test($("#" + i).val())) {
+        $("label[for='" + i + "']").removeAttr("class", "bad");
+      } else {
+        $("label[for='" + i + "']").attr("class", "bad");
+        ok = false;
+      }
     }
   );
+
+  ['starttime', 'endtime'].forEach(
+    function(i) {
+      if (/^\d{2}:\d{2}:\d{2}$/.test($("#" + i).val())) {
+        $("label[for='" + i + "']").removeAttr("class", "bad");
+      } else {
+        $("label[for='" + i + "']").attr("class", "bad");
+        ok = false;
+      }
+    }
+  );
+
+  if (ok) {
+    var channel = $("#channel").val();
+    var params = {
+      "network": $("#network").val(),
+      "station": $("#station").val(),
+      "start": Date.parse($("#startdate").val() + " " + $("#starttime").val()),
+      "end": Date.parse($("#enddate").val() + " " + $("#endtime").val())
+    };
+    var queryUrl = "http://localhost:8003/v1/metrics/" + channel + "?" + jQuery.param(params);
+    console.log(queryUrl);
+    console.time("Fetching data")
+    data = d3.json(queryUrl,
+      function(d) {
+        r = d.results;
+        console.timeEnd("Fetching data")
+        console.log("Rendering " + r.length + "points.")
+        s.selectAll("*").remove();
+        render(s, r);
+      }
+    )
+  } else {
+  }
 }
+$( document ).ready( updatedVals() );
 </script>
 {% endblock %}

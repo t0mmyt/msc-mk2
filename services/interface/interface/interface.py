@@ -4,21 +4,23 @@ Main Web Interface
 import os
 import json
 import requests
+from collections import OrderedDict
 from requests import ConnectionError
 from flask import Flask, render_template, abort, request, jsonify
 from jinja2 import TemplateNotFound
 from interface.nav import SimpleNavigator
 from interface.importer import Importer
 
+
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
-nav = SimpleNavigator(
+nav = SimpleNavigator(OrderedDict(
     Home="/",
     Import="/import",
     Explore="/explore",
     Sax="/sax",
-)
+))
 
 
 @app.route("/")
