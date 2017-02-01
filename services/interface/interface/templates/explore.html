@@ -7,97 +7,198 @@
 {% endblock %}
 {% block contents %}
 <style>
-.line {
+svg .line {
   fill: none;
   stroke: steelblue;
   stroke-width: 2px;
 }
+.bad {
+  color: red;
+}
 </style>
+<div class="row">
+	<div class="col-lg-12" id="render"></div>
+</div>
+<div class="row">
+  <form>
+    <div class="col-lg-2 form-group">
+      <label for="network">Network</label><br>
+      <select class="form-control" id="network" name="network" size=4>
+        <option value="YW" selected>YW</option>
+      </select>
+    </div>
+    <div class="col-lg-2 form-group">
+      <label for="station">Station</label><br>
+      <select class="form-control" id="station" name="station" size=4>
+        <option value="NAB1" selected>NAB1</option>
+        <option value="NAB2">NAB2</option>
+        <option value="NAB3">NAB3</option>
+        <option value="NAB4">NAB4</option>
+        <option value="NAB5">NAB5</option>
+        <option value="NAB6">NAB6</option>
+        <option value="NAB7">NAB7</option>
+        <option value="NAB8">NAB8</option>
+      </select>
+    </div>
+    <div class="col-lg-1 form-group">
+      <label for="channel">Channel</label><br>
+      <select class="form-control" id="channel" name="channel" size=4>
+        <option value="Z" selected>Z</option>
+        <option value="N">N</option>
+        <option value="E">E</option>
+      </select>
+    </div>
+    <div class="col-lg-2 form-group">
+      <label for="startdate" id="startdateLabel">Start Date</label><br>
+      <input type="text" id="startdate" name="startdate" placeholder="YYYY/MM/DD" value=""><br>
+      <label for="enddate" id=>End Date</label><br>
+      <input type="text" id="enddate" name="enddate" placeholder="YYYY/MM/DD" value="">
+    </div>
+    <div class="col-lg-2 form-group">
+      <label for="starttime">Start Time</label><br>
+      <input type="text" id="starttime" name="starttime" placeholder="HH:MM:SS" value=""><br>
+      <label for="endtime">End Time</label><br>
+      <input type="text" id="endtime" name="endtime" placeholder="HH:MM:SS" value="">
+    </div>
+    <div class="col-lg-2 form-group">
+    </div>
+  </form>
+</div>
+
 <script>
-data = d3.json("http://localhost:8003/v1/metrics/Z?start=131540692000&end=1315493280000&station=NAB1&network=YW",
-  function(d) {
-    r = d.results;
-    render(r);
-  }
-);
+function svg(parent, w, h) {
+  return d3.select(parent)
+           .append("svg")
+           .attr("width", w)
+           .attr("height", h);
+}
 
-var w = 1000;
-var h = 400;
-var padding = 20;
-
-var svg = d3.select("#contents")
-            .append("svg")
-            .attr("width", w)
-            .attr("height", h);
-
-function render(dataset) {
+function render(svg, dataset) {
   var xScale = d3.scaleLinear()
-                       .domain([
-                         d3.min(dataset, function(d) { return d[0]; }),
-                         d3.max(dataset, function(d) { return d[0]; })
-                       ])
-                       .range([padding, w - padding * 4]);
+                 .domain([
+                   d3.min(dataset, function(d) { return d[0]; }),
+                   d3.max(dataset, function(d) { return d[0]; })
+                 ])
+                 .range([padding, w - padding * 4]);
 
   var yScale = d3.scaleLinear()
-                       .domain([
-                         d3.min(dataset, function(d) { return d[1]; }),
-                         d3.max(dataset, function(d) { return d[1]; })
-                       ])
-                       .range([h - padding, padding]);
+                 .domain([
+                   d3.min(dataset, function(d) { return d[1]; }),
+                   d3.max(dataset, function(d) { return d[1]; })
+                 ])
+                 .range([h - padding, padding]);
 
   var xAxis = d3.axisBottom()
                 .ticks(10)
-                .tickFormat(d3.timeFormat("%H:%M:%S"))
+                .tickFormat(d3.timeFormat("%H:%M:%S:%L"))
                 .scale(xScale);
 
   var yAxis = d3.axisRight()
                 .scale(yScale);
 
+  console.time("Line")
   var line = d3.line()
-    .x(function(d) {return dataset[0]})
-    .y(function(d) {return dataset[1]});
+    .x(function(d) {
+      return xScale(d[0]);
+    })
+    .y(function(d) {
+      return yScale(d[1]);
+    });
+  console.timeEnd("Line")
 
-  svg.append("g")
-      .call(xAxis)
-      .selectAll("text")
-        .style("text-anchor", "end")
-        .attr("dx", "-.8em")
-        .attr("dy", ".15em")
-        .attr("transform", "rotate(-65)");
-  svg.append("g")
-      .call(yAxis);
-
+  console.time("Render");
   svg.append("path")
         .data([dataset])
         .attr("class", "line")
+        .attr("id", "graph")
         .attr("d", line);
+  console.timeEnd("Render");
 
-  // svg.selectAll("circle")
-  //    .data(dataset)
-  //    .enter()
-  //    .append("circle")
-  //    .attr("r", 1)
-  //    .attr("cx", function(d) {
-  //      return xScale(d[0]);
-  //    })
-  //    .attr("cy", function(d){
-  //      return yScale(d[1]);
-  //    });
-
-  // svg.selectAll("text")
-  //    .data(dataset)
-  //    .enter()
-  //    .append("text")
-  //    .text(function(d) {
-  //      return d[0] + "," + d[1];
-  //    })
-  //    .attr("x", function(d) {
-  //      return xScale(d[0]);
-  //    })
-  //    .attr("y", function(d) {
-  //      return yScale(d[1]);
-  //    })
-    //  .attr("fill", "red");
+  svg.append("g")
+  .call(yAxis);
+  svg.append("g")
+      .call(xAxis)
+      .attr('transform', 'translate(0,' + (yScale(0)) + ')')
+      .selectAll("text")
+        .style("text-anchor", "end")
+        .style("stroke", "white")
+        .style("stroke-width", "2px")
+        .style("fill", "black")
+        .style("paint-order", "stroke")
+        .attr("vector-effect", "non-scaling-stroke")
+        .attr("dx", "-.8em")
+        .attr("dy", ".15em")
+        .attr("transform", "rotate(-65)");
 };
+
+function clear(svg) {
+  svg.selectAll("*").remove();
+}
+
+var w = 1000;
+var h = 400;
+var padding = 20;
+
+var s = svg("#render", w, h)
+console.time("Fetching data")
+data = d3.json("http://localhost:8003/v1/metrics/Z?start=131550700000&end=1315493280000&station=NAB1&network=YW",
+  function(d) {
+    r = d.results;
+    console.timeEnd("Fetching data")
+    console.log("Rendering " + r.length + "points.")
+    render(s, r);
+  }
+);
+
+s.selectAll("*").remove()
+</script>
+<script>
+var watchClicksOn = ['network', 'station', 'channel'];
+watchClicksOn.forEach(function(i) {
+  $("#" + i).on("click", function() {
+    console.log($("#" + i).attr("name") + " " + $("#" + i).val());
+    updatedVals();
+  })});
+
+['startdate', 'enddate'].forEach(function(i) {
+  $("#" + i).on("input", function() {
+    if (/^\d{4}\/\d{2}\/\d{2}$/.test($("#" + i).val())) {
+      $("label[for='" + i + "']").removeAttr("class", "bad");
+      updatedVals();
+    } else {
+      $("label[for='" + i + "']").attr("class", "bad");
+    }
+})});
+
+['starttime', 'endtime'].forEach(function(i) {
+  $("#" + i).on("input", function() {
+    if (/^\d{2}:\d{2}:\d{2}$/.test($("#" + i).val())) {
+      $("label[for='" + i + "']").removeAttr("class", "bad");
+      updatedVals();
+    } else {
+      $("label[for='" + i + "']").attr("class", "bad");
+    }
+})});
+
+function updatedVals() {
+  var channel = $("#channel").val();
+  var params = {
+    "network": $("#network").val(),
+    "station": $("#station").val(),
+    "start": Date.parse($("#startdate").val() + " " + $("#starttime").val()),
+    "end": Date.parse($("#enddate").val() + " " + $("#endtime").val())
+  };
+  var queryUrl = "http://localhost:8003/v1/metrics/" + channel + "?" + jQuery.param(params);
+  console.log(queryUrl);
+  data = d3.json(queryUrl,
+    function(d) {
+      r = d.results;
+      console.timeEnd("Fetching data")
+      console.log("Rendering " + r.length + "points.")
+      s.selectAll("*").remove();
+      render(s, r);
+    }
+  );
+}
 </script>
 {% endblock %}
