@@ -47,6 +47,7 @@ class KairosDB(object):
         q = {
             'start_absolute': start,
             'end_absolute': end,
+            "time_zone": "UTC",
             'metrics': [
                 {
                     'name': name,
