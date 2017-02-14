@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-from flask_restful import Resource, Api, reqparse
+from flask_restful import Resource, Api, reqparse, inputs
 from flask_cors import CORS, cross_origin
 from sax.dataset import Dataset
 from os import getenv
@@ -52,15 +52,35 @@ class Sax(Resource):
             else:
                 params[p] = request.args[p]
 
+        normalise = inputs.boolean(request.args.get("normalise", False))
+        absolute = inputs.boolean(request.args.get("absolute", False))
         bp_l = float(request.args.get('bandpassLow', 0))
         bp_h = float(request.args.get('bandpassHigh', 0))
+        alphabet = request.args.get("alphabet", None)
+        interval = int(request.args.get("interval", 0))
+        distribution = request.args.get("distribution", "guassian")
 
         d = Dataset(
             url="http://localhost:8003/v1/metrics/{}".format(name),
             **params
         )
+
+        # If there are bandpass params, run a bandpass
         if bp_l and bp_h:
             d.bandpass(bp_l, bp_h)
+
+        # Normalise if set
+        if normalise:
+            d.normalise()
+
+        if absolute:
+            d.absolute()
+
+        # If there are SAX params, run SAX code
+        if alphabet and interval > 0:
+            d.paa(interval)
+            d.sax(alphabet, absolute, distribution)
+
         return d.payload
 
 app = Flask(__name__)

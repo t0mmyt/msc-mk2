@@ -6,9 +6,14 @@
 <!-- TODO - Move this to footer? -->
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.4.3/d3.min.js"></script>
 <style>
-svg .line {
+svg .raw {
   fill: none;
   stroke: steelblue;
+  stroke-width: 2px;
+}
+svg .paa {
+  fill: none;
+  stroke: red;
   stroke-width: 2px;
 }
 .bad {
@@ -18,6 +23,12 @@ svg .line {
   stroke: white;
   stroke-width: 2px;
   fill: black;
+  paint-order: stroke;
+}
+.sax {
+  stroke: white;
+  stroke-width: 2px;
+  fill: red;
   paint-order: stroke;
 }
 </style>
@@ -70,12 +81,26 @@ svg .line {
   </div>
   <div class="row">
 		<div class="col-lg-2 form-group">
+			<input type="checkbox" name="normalise" id="normalise">Normalise</input><br>
+			<input type="checkbox" name="absolute" id="absolute">Absolute</input><br>
+			<input type="radio" name="distribution" id="distribution_gaussian" value="gaussian" checked>Gaussian</input><br>
+			<input type="radio" name="distribution" id="distribution_proportional" value="proportional">Proportional</input><br>
+		</div>
+		<div class="col-lg-2 form-group">
+			<input type="checkbox" name="bandpass" id="bandpass">Bandpass</input><br>
 			<label for="bandpassLow">Bandpass Low (Hz)</label><br>
       <input type="text" id="bandpassLow" name="bandpassLow" value="5"><br>
       <label for="bandpassHigh">Bandpass High (Hz)</label><br>
       <input type="text" id="bandpassHigh" name="bandpassHigh" value="20">
     </div>
-  </div>
+		<div class="col-lg-2 form-group">
+			<input type="checkbox" name="sax" id="sax">SAX</input><br>
+			<label for="interval">PAA Interval (ms)</label><br>
+			<input type="text" id="interval" name="interval" value="50"><br>
+			<label for="alphabet">SAX Alphabet</label><br>
+			<input type="text" id="alphabet" name="alphabet" value="abcdefg">
+		</div>
+	</div>
 </form>
 <script>
 function svg(parent, w, h) {
@@ -85,24 +110,24 @@ function svg(parent, w, h) {
            .attr("height", h);
 }
 
-function render(svg, dataset) {
+function render(svg, dataset, interval) {
   var xScale = d3.scaleLinear()
                  .domain([
-                   d3.min(dataset, function(d) { return d[0]; }),
-                   d3.max(dataset, function(d) { return d[0]; })
+                   d3.min(dataset.results, function(d) { return d[0]; }),
+                   d3.max(dataset.results, function(d) { return d[0]; })
                  ])
                  .range([padding, w - padding * 4]);
 
   var yScale = d3.scaleLinear()
                  .domain([
-                   d3.min(dataset, function(d) { return d[1]; }),
-                   d3.max(dataset, function(d) { return d[1]; })
+                   d3.min(dataset.results, function(d) { return d[1]; }),
+                   d3.max(dataset.results, function(d) { return d[1]; })
                  ])
                  .range([h - padding, padding]);
 
   var xAxis = d3.axisBottom()
                 .ticks(10)
-                .tickFormat(d3.timeFormat("%H:%M:%S:%L"))
+                .tickFormat(d3.timeFormat("%H:%M:%S.%L"))
                 .scale(xScale);
 
   var yAxis = d3.axisRight()
@@ -118,20 +143,53 @@ function render(svg, dataset) {
     });
   console.timeEnd("Line")
 
-  console.time("Render");
+  console.time("Render Raw");
+
   svg.append("path")
-        .data([dataset])
-        .attr("class", "line")
+        .data([dataset.results])
+        .attr("class", "raw")
         .attr("id", "graph")
         .attr("d", line);
-  console.timeEnd("Render");
+	if (dataset.paa) {
+		paa_rendered = []
+		dataset.paa.forEach(function(d, i) {
+			paa_rendered[i * 2] = [dataset.paa[i][0] - interval / 2, dataset.paa[i][1]]
+			paa_rendered[i * 2 + 1] = [dataset.paa[i][0] + interval / 2, dataset.paa[i][1]]
+		})
+		svg.append("path")
+       .data([paa_rendered])
+       .attr("class", "paa")
+       .attr("id", "graph")
+       .attr("d", line);
+		if (dataset.sax){
+			console.time("Rendering SAX")
+			svg.selectAll("text")
+			  .data(dataset.sax)
+			  .enter()
+			  .append("text")
+			  .text(function(d) {
+			    return d;
+			  })
+			  .attr("x", function(d, i) {
+			    return xScale((i * interval) + dataset.results[0][0]);
+			  })
+			  .attr("y", function(d, i) {
+					return 10;
+					// return yScale(dataset.paa[i][1]) - 5;
+			  })
+			  .attr("text-anchor", "middle")
+				.attr("class", "sax");
+			console.timeEnd("Rendering SAX");
+		}
+	}
+	console.timeEnd("Render Raw");
 
   svg.append("g")
       .call(yAxis)
       .selectAll("text")
         .attr("class", "axis")
-        .attr("vector-effect", "non-scaling-stroke")
-;
+        .attr("vector-effect", "non-scaling-stroke");
+
   svg.append("g")
       .call(xAxis)
       .attr('transform', 'translate(0,' + (yScale(0)) + ')')
@@ -153,6 +211,9 @@ function clear(svg) {
 
 function fetch() {
 	var ok = true;
+	var bandpass = $("#bandpass").is(":checked");
+	var sax = $("#sax").is(":checked");
+
 	['startdate', 'enddate'].forEach(
 		function(i) {
 			if (/^\d{4}\/\d{2}\/\d{2}$/.test($("#" + i).val())) {
@@ -177,14 +238,33 @@ function fetch() {
 
 	['bandpassLow', 'bandpassHigh'].forEach(
 		function(i) {
-			if (/[\d.]+$/.test($("#" + i).val())) {
+			if (/[\d.]+$/.test($("#" + i).val()) || !(bandpass)) {
 				$("label[for='" + i + "']").removeAttr("class", "bad");
 			} else {
 				$("label[for='" + i + "']").attr("class", "bad");
-				ok = false;
+				if (bandpass) ok = false;
 			}
+			$("#" + i).prop("disabled", !(bandpass));
 		}
 	);
+
+	if (/^\d+$/.test($("#interval").val()) || !(sax)) {
+		$("label[for='interval']").removeAttr("class", "bad");
+	} else {
+		$("label[for='interval']").attr("class", "bad");
+		if (sax) ok = false;
+	}
+	if (/^[a-zA-Z0-9]+$/.test($("#alphabet").val()) || !(sax)) {
+		$("label[for='alphabet']").removeAttr("class", "bad");
+	} else {
+		$("label[for='alphabet']").attr("class", "bad");
+		if (sax) ok = false;
+	}
+	['interval', 'alphabet'].forEach(
+		function(i) {
+			$("#" + i).prop("disabled", !(sax));
+		}
+	)
 
 	if (ok) {
 		var channel = $("#channel").val();
@@ -193,21 +273,33 @@ function fetch() {
 			"station": $("#station").val(),
 			"start": Date.parse($("#startdate").val() + " " + $("#starttime").val()),
 			"end": Date.parse($("#enddate").val() + " " + $("#endtime").val()),
-			"bandpassLow": $("#bandpassLow").val(),
-			"bandpassHigh": $("#bandpassHigh").val()
+			"normalise": $("#normalise").is(":checked"),
+			"absolute": $("#absolute").is(":checked"),
+			"distribution": $('input[name=distribution]:checked').val(),
 		};
+		if (bandpass) {
+			params.bandpassLow = $("#bandpassLow").val();
+			params.bandpassHigh = $("#bandpassHigh").val();
+		}
+		if (sax) {
+			params.interval = $("#interval").val();
+			params.alphabet = $("#alphabet").val();
+		}
 		var queryUrl = "http://localhost:8004/v1/sax/" + channel + "?" + jQuery.param(params);
 		console.log(queryUrl);
 		console.time("Fetching data");
 		data = d3.json(queryUrl,
       function(d) {
-        r = d.results;
         console.timeEnd("Fetching data")
-        console.log("Rendering " + r.length + "points.")
+        console.log("Rendering " + d.results.length + "points.")
         s.selectAll("*").remove();
-        render(s, r);
+        render(s, d, $("#interval").val());
       }
     )
+		// var url = document.location.toString();
+		// var newUrl = url.substring(0, url.indexOf('?') + 1) + $.param(params);
+		// history.pushState(params, document.title, newUrl)
+		// document.location = url.substring(0, url.indexOf('?') + 1) + $.param(params);
 	}
 }
 
@@ -215,16 +307,34 @@ var w = 1000;
 var h = 400;
 var padding = 20;
 var s = svg("#render", w, h);
+var params = {};
 
-['network', 'station', 'channel'].forEach(
+['network', 'station', 'channel', 'bandpass', 'sax'].forEach(
   function(i) { $("#" + i).on("change", function() {fetch()}); }
 );
 
 [
 	'startdate', 'enddate', 'starttime', 'endtime',
-	'bandpassLow', 'bandpassHigh'
+	'normalise', 'absolute',
+	'bandpassLow', 'bandpassHigh',
+	'interval', 'alphabet', 'distribution_gaussian', 'distribution_proportional'
 ].forEach(
   function(i) { $("#" + i).on("input", function() {fetch()}); }
 )
+
+// window.onpopstate = function(e){
+// 	var url = document.location.toString();
+// 	var paramsEnc = url.substring(url.indexOf('?') + 1, url.length);
+// 	paramsEnc.split("&").forEach(function(i){
+// 		var a = i.split("=");
+// 		var k = a[0];
+// 		var v = decodeURIComponent(a[1]);
+// 		$("#" + k).val(v);
+// 		params[k] = v;
+// 	});
+// 	fetch();
+// };
+
+$( document ).ready( fetch() );
 </script>
 {% endblock %}

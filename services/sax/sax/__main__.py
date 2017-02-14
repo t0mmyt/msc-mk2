@@ -1,11 +1,8 @@
-#!/usr/bin/env python3
 '''
 Run the SAX module using the flask internal server
 '''
-from os import getenv
-from sax.api import app
-
-LISTEN_PORT = int(getenv('LISTEN_PORT', 8000))
+import sys
+from .api import app
 
 app.run(
     host="127.0.0.1",
