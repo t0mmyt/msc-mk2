@@ -309,15 +309,16 @@ var padding = 20;
 var s = svg("#render", w, h);
 var params = {};
 
-['network', 'station', 'channel', 'bandpass', 'sax'].forEach(
+[ 'network', 'station', 'channel', 'bandpass',
+  'sax',	'normalise', 'absolute',
+  'distribution_gaussian', 'distribution_proportional' ].forEach(
   function(i) { $("#" + i).on("change", function() {fetch()}); }
 );
 
 [
 	'startdate', 'enddate', 'starttime', 'endtime',
-	'normalise', 'absolute',
 	'bandpassLow', 'bandpassHigh',
-	'interval', 'alphabet', 'distribution_gaussian', 'distribution_proportional'
+	'interval', 'alphabet',
 ].forEach(
   function(i) { $("#" + i).on("input", function() {fetch()}); }
 )
