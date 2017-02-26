@@ -1,6 +1,6 @@
-'''
+"""
 Library for reading SAC obersvations for import to a TSDB
-'''
+"""
 import obspy
 from iso8601 import parse_date
 from logging import debug, info

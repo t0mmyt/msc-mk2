@@ -1,0 +1,6 @@
+gunicorn
+flup6
+flask
+flask_restful
+flask_cors
+requests

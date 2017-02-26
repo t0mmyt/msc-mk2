@@ -1,0 +1,13 @@
+gunicorn
+numpy
+scipy
+matplotlib
+lxml
+sqlalchemy
+iso8601
+flup6
+flask
+flask_restful
+requests
+obspy
+gevent

@@ -1,23 +1,21 @@
-'''
+"""
 Library for interacting with KairosDB REST API
-'''
+"""
 import requests
 
 
 class KairosDB(object):
-    '''
-    Object for interacting with the KairosDB REST API
+    def __init__(self, url):
+        """
+        Object for interacting with the KairosDB REST API
 
-    Args:
-        host (str): hostname of the KairosDB instance
-        port (int): port number to connect to
-    '''
-    def __init__(self, host, port):
-        self.host = host
-        self.port = port
+        Args:
+            url: Base url or KairosDB instance (e.g. http://localhost:8080)
+        """
+        self.url = url
 
     def post(self, payload):
-        '''
+        """
         Send data to the KairosDB as a KairosDBPayload
 
         Args:
@@ -25,9 +23,9 @@ class KairosDB(object):
 
         Returns:
             True on success else False
-        '''
+        """
         r = requests.post(
-            url="http://{}:{}/api/v1/datapoints".format(self.host, self.port),
+            url="{}/api/v1/datapoints".format(self.url),
             json=payload
         )
         if r.status_code == 204:
@@ -35,7 +33,7 @@ class KairosDB(object):
         return False
 
     def query(self, name, tags, start, end):
-        '''
+        """
         Query data from KairosDB.
 
         Args:
@@ -43,7 +41,7 @@ class KairosDB(object):
             start (int): start_absolute in milliseconds since the epoch
             end (int)  : end_absolute in milliseconds since the epoch
             tags (dict): list of tags to add to query
-        '''
+        """
         q = {
             'start_absolute': start,
             'end_absolute': end,
@@ -57,7 +55,7 @@ class KairosDB(object):
         }
         # TODO - try/except
         r = requests.post(
-            url="http://{}:{}/api/v1/datapoints/query".format(self.host, self.port),
+            url="{}/api/v1/datapoints/query".format(self.url),
             json=q
         )
         results = r.json()
@@ -69,35 +67,35 @@ class KairosDB(object):
 
 
 class KairosDBPayload(object):
-    '''
+    """
     Payload constructor for sending data to KairosDB
 
     Args:
         name (str):  name of metric
         tags (dict): tags for metric
-    '''
+    """
     def __init__(self, name, tags):
         self.name = name
         self.tags = tags
         self.datapoints = []
 
     def append(self, timestamp, value):
-        '''
+        """
         Add datapoints to the payload
 
         Args:
             timestamp (int): time of metric in milliseconds since the epoch
             value (float):   value for metric
-        '''
+        """
         self.datapoints.append((timestamp, value))
 
     def as_dict(self):
-        '''
+        """
         Return the payload as a dict ready for JSON conversion
 
         Returns:
             dict of payload
-        '''
+        """
         return dict(
             name=self.name,
             tags=self.tags,

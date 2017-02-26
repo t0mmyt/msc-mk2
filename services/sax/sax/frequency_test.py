@@ -39,27 +39,11 @@ t_paa_plot = [datetime.utcfromtimestamp(i/1000) for i in t_paa_plot]
 fig, ax1 = plt.subplots()
 ax2 = ax1.twinx()
 
-print(t_paa_plot, z_paa_plot)
-
 ax1.plot(t_dt, z_orig, 'b-')
-ax1.plot(t_paa_plot, z_paa_plot, 'g-')
+# ax1.plot(t_paa_plot, z_paa_plot, 'g-')
 ax2.plot(t, f, 'r')
 ax1.set_ylabel('Original Data', color='b')
 ax2.set_ylabel('Frequency (Hz)', color='r')
 
-#
-# # t = np.arange(0.01, 10.0, 0.01)
-# # s1 = np.exp(t)
-# # ax1.plot(t, s1, 'b-')
-# # ax1.set_xlabel('time (s)')
-# # # Make the y-axis label, ticks and tick labels match the line color.
-# # ax1.set_ylabel('exp', color='b')
-# # ax1.tick_params('y', colors='b')
-# #
-# # s2 = np.sin(2 * np.pi * t)
-# # ax2.plot(t, s2, 'r.')
-# # ax2.set_ylabel('sin', color='r')
-# # ax2.tick_params('y', colors='r')
-# #
 fig.tight_layout()
 plt.show()

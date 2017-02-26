@@ -4,7 +4,8 @@ import requests
 
 class Importer(object):
     def __init__(self, url=None):
-        self.url = getenv('OBSLOADER', "http://localhost:8164/v1/observations") if not url else url
+        url = getenv('OBSLOADER', "http://localhost:8164") if not url else url
+        self.url = "{}/v1/observations".format(url)
         self.data = []
 
     def add(self, data):

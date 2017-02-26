@@ -6,11 +6,11 @@ from tsdatastore.kairosdb import KairosDB as db, KairosDBPayload as payload
 
 
 class InvalidUsage(Exception):
-    '''
+    """
     Error handler for API.
 
     Taken from http://flask.pocoo.org/docs/0.12/patterns/apierrors
-    '''
+    """
     status_code = 400
 
     def __init__(self, message, status_code=None, payload=None):
@@ -27,16 +27,15 @@ class InvalidUsage(Exception):
 
 
 class Metrics(Resource):
-    '''
+    """
     Metrics endpoint for tsdatastore API.
-    '''
+    """
     def __init__(self):
-        host = getenv('DBHOST', "localhost")
-        port = int(getenv('DBPORT', 8083))
-        self.db = db(host, port)
+        url = getenv('DB_URL', "http://localhost:8080")
+        self.db = db(url)
 
     def put(self, name):
-        '''
+        """
         HTTP PUT handler
 
         Expects a JSON object of the following structure:
@@ -55,7 +54,7 @@ class Metrics(Resource):
 
         Args:
             name (str): Name of metric.
-        '''
+        """
         data = request.json
         p = payload(name, data['tags'])
         t = data['starttime']
@@ -69,7 +68,7 @@ class Metrics(Resource):
             return None, 400
 
     def get(self, name):
-        '''
+        """
         HTTP GET handler
 
         Additional fields to be passed as query string:
@@ -78,7 +77,7 @@ class Metrics(Resource):
 
         Args:
             name (str): Name of metric.
-        '''
+        """
         for p in ("start", "end"):
             if p not in request.args:
                 raise InvalidUsage(
