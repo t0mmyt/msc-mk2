@@ -1,0 +1,4 @@
+celery
+cassandra-driver
+redis
+requests

@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 class SimpleNavigator(object):
     base = '<ul class="nav nav-pills nav-stacked">{}</ul>'
     active = "<li class=\"active\"><a href=\"{1}\">{0}</a></li>"
@@ -10,7 +8,7 @@ class SimpleNavigator(object):
 
     def render_as(self, name):
         out = ""
-        for link, path in self.links.items():
+        for link, path in self.links:
             if name != link:
                 out += SimpleNavigator.inactive.format(link, path)
             else:

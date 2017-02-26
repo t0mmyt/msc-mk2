@@ -61,3 +61,8 @@ services:
      environment:
        - LISTEN_PORT=8165
        - TSDATASTORE=http://tsdatastore:8163
+
+  redis:
+    image: redis:3.0
+    ports:
+      - 127.0.0.1:6379:6379

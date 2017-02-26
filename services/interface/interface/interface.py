@@ -16,11 +16,10 @@ from .proxy_sax import ProxySax
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
-nav = SimpleNavigator(OrderedDict(
-    Home="/",
-    Import="/import",
-    Explore="/explore",
-    Sax="/sax",
+nav = SimpleNavigator((
+    ("Home", "/"),
+    ("Import", "/import"),
+    ("Explore/SAX", "/sax"),
 ))
 
 
@@ -61,18 +60,10 @@ def render_import():
         abort(404)
 
 
-@app.route("/explore")
-def render_explore():
-    try:
-        return render_template("explore.html", nav=nav.render_as('Explore'))
-    except TemplateNotFound:
-        abort(404)
-
-
 @app.route("/sax")
 def render_sax():
     try:
-        return render_template("sax.html", nav=nav.render_as('Sax'))
+        return render_template("sax.html", nav=nav.render_as('Explore/SAX'))
     except TemplateNotFound:
         abort(404)
 
