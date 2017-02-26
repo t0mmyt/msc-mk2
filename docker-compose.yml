@@ -16,27 +16,39 @@ services:
     depends_on:
       - cassandra
     ports:
-      - 127.0.0.1:8083:8080
-
-  obsloader:
-    image: seismic/obsloader
-    depends_on:
-      - tsdatastore
-    ports:
-      - 127.0.0.1:8002:8000
-    environment:
-      - DSHOST=tsdatastore
-      - DSPORT=8000
+      - 127.0.0.1:8080:8080
 
   tsdatastore:
     image: seismic/tsdatastore
     depends_on:
       - kairosdb
     ports:
-      - 127.0.0.1:8003:8000
+      - 127.0.0.1:8163:8163
     environment:
-      - DBHOST=kairosdb
-      - DBPORT=8080
+      - LISTEN_PORT=8163
+      - DB_URL=http://kairosdb:8080
+
+  obsloader:
+    image: seismic/obsloader
+    depends_on:
+      - tsdatastore
+    ports:
+      - 127.0.0.1:8164:8164
+    environment:
+      - LISTEN_PORT=8164
+      - TSDATASTORE=http://tsdatastore:8163
+
+  interface:
+    image: seismic/interface
+    depends_on:
+      - tsdatastore
+      - obsloader
+    ports:
+      - 127.0.0.1:8180:8180
+    environment:
+      - LISTEN_PORT=8180
+      - OBSLOADER=http://obsloader:8164
+      - TSDATASTORE=http://tsdatastore:8163
 
   # sax:
   #   image: seismic/sax
