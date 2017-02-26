@@ -1,6 +1,6 @@
-'''
+"""
 Main Web Interface
-'''
+"""
 import os
 import json
 import requests
@@ -87,5 +87,5 @@ def raw_json(channel):
 
 
 if __name__ == "__main__":
-    TSDATASTORE = os.getenv('TSDATASTORE', "http://localhost:8003")
+    TSDATASTORE = os.getenv('TSDATASTORE', "http://localhost:8163")
     app.run(debug=True)

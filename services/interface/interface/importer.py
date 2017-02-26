@@ -1,9 +1,10 @@
 from os import getenv
 import requests
 
+
 class Importer(object):
     def __init__(self, url=None):
-        self.url = getenv('OBSLOADER', "http://127.0.0.1:8002/v1/observations") if not url else url
+        self.url = getenv('OBSLOADER', "http://localhost:8164/v1/observations") if not url else url
         self.data = []
 
     def add(self, data):
