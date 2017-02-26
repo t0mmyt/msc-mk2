@@ -1,5 +1,6 @@
 from os import getenv
 import requests
+from flask_api import status
 
 
 class Importer(object):
@@ -18,10 +19,12 @@ class Importer(object):
         return status
 
     def _upload(self, data):
-        # TODO try/except ConnectionError
-        r = requests.put(
-            url=self.url,
-            headers={'Content-Type': "application/octet"},
-            data=data
-        )
-        return r.status_code
+        try:
+            r = requests.put(
+                url=self.url,
+                headers={'Content-Type': "application/octet"},
+                data=data
+            )
+            return r.status_code
+        except requests.ConnectionError:
+            return status.HTTP_503_SERVICE_UNAVAILABLE

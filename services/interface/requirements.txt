@@ -1,6 +1,7 @@
 gunicorn
 flask-appconfig>=0.10
 flask-bootstrap
+flask-api
 flask-nav
 flask-debug
 flask-wtf

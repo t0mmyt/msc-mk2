@@ -2,14 +2,15 @@
 Main Web Interface
 """
 import os
-import json
 import requests
 from collections import OrderedDict
 from requests import ConnectionError
 from flask import Flask, render_template, abort, request, jsonify
+from flask_api import status
 from jinja2 import TemplateNotFound
-from interface.nav import SimpleNavigator
-from interface.importer import Importer
+from .nav import SimpleNavigator
+from .importer import Importer
+from .proxy_sax import ProxySax
 
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
@@ -29,6 +30,7 @@ def render_index():
         return render_template("index.html", nav=nav.render_as('Home'))
     except TemplateNotFound:
         abort(404)
+
 
 @app.route("/import", methods=['GET', 'POST'])
 def render_import():
@@ -58,12 +60,14 @@ def render_import():
     except TemplateNotFound:
         abort(404)
 
+
 @app.route("/explore")
 def render_explore():
     try:
         return render_template("explore.html", nav=nav.render_as('Explore'))
     except TemplateNotFound:
         abort(404)
+
 
 @app.route("/sax")
 def render_sax():
@@ -72,18 +76,29 @@ def render_sax():
     except TemplateNotFound:
         abort(404)
 
+
 @app.route("/raw_json/<channel>")
 def raw_json(channel):
     try:
         r = requests.get(
             "{}/v1/metrics/{}".format(TSDATASTORE, channel),
-            params = request.args
+            params=request.args
         )
         if r.status_code != 200:
             abort(r.status_code)
         return jsonify(r.json())
     except ConnectionError:
         abort(503)
+
+
+@app.route("/v1/sax/<channel>")
+def proxy_sax(channel):
+    proxy = ProxySax()
+    response = proxy(channel, **request.args)
+    # If we're 200, then return JSON, else as text
+    if response[1] == status.HTTP_200_OK:
+        return jsonify(response[0]), response[1]
+    return response
 
 
 if __name__ == "__main__":
