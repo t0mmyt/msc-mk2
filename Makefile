@@ -8,6 +8,9 @@ tsdatastore:
 obsloader:
 	docker build --build-arg SERVICE=obsloader --build-arg PORT=8164 -t seismic/obsloader .
 
+sax:
+	docker build --build-arg SERVICE=sax --build-arg PORT=8185 -t seismic/sax .
+
 interface:
 	docker build --build-arg SERVICE=interface --build-arg PORT=8180 -t seismic/interface .
 

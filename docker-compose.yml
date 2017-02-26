@@ -43,19 +43,21 @@ services:
     depends_on:
       - tsdatastore
       - obsloader
+      - sax
     ports:
       - 127.0.0.1:8180:8180
     environment:
       - LISTEN_PORT=8180
       - OBSLOADER=http://obsloader:8164
+      - SAX=http://sax:8165
       - TSDATASTORE=http://tsdatastore:8163
 
-  # sax:
-  #   image: seismic/sax
-  #   depends_on:
-  #     - tsdatastore
-  #   ports:
-  #     - 127.0.0.1:8004:8000
-  #   environment:
-  #     - DSHOST=tsdatastore
-  #     - DSPORT=8000
+  sax:
+     image: seismic/sax
+     depends_on:
+       - tsdatastore
+     ports:
+       - 127.0.0.1:8165:8165
+     environment:
+       - LISTEN_PORT=8165
+       - TSDATASTORE=http://tsdatastore:8163
