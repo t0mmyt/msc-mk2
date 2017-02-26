@@ -1,15 +1,16 @@
 from flask import Flask, jsonify, request
-from flask_restful import Resource, Api, reqparse, inputs
-from flask_cors import CORS, cross_origin
-from sax.dataset import Dataset
+from flask_restful import Resource, Api, inputs
+from flask_cors import CORS
+from .dataset import Dataset
 from os import getenv
 
+
 class InvalidUsage(Exception):
-    '''
+    """
     Error handler for API.
 
     Taken from http://flask.pocoo.org/docs/0.12/patterns/apierrors
-    '''
+    """
     status_code = 400
 
     def __init__(self, message, status_code=None, payload=None):
@@ -17,6 +18,7 @@ class InvalidUsage(Exception):
         self.message = message
         if status_code is not None:
             self.status_code = status_code
+        print("Exception Got called")
         self.payload = payload
 
     def to_dict(self):
@@ -26,15 +28,14 @@ class InvalidUsage(Exception):
 
 
 class Sax(Resource):
-    '''
+    """
     Metrics endpoint for tsdatastore API.
-    '''
+    """
     def __init__(self):
-        host = getenv('DSHOST', "localhost")
-        port = int(getenv('DSPORT', 8084))
+        self.tsdatastore = getenv('TSDATASTORE', "http://localhost:8163")
 
     def get(self, name):
-        '''
+        """
         HTTP GET handler
 
         Additional fields to be passed as query string:
@@ -43,7 +44,7 @@ class Sax(Resource):
 
         Args:
             name (str): Name of metric.
-        '''
+        """
         params = {}
         for p in ("start", "end", "station", "network"):
             if p not in request.args:
@@ -61,7 +62,7 @@ class Sax(Resource):
         distribution = request.args.get("distribution", "guassian")
 
         d = Dataset(
-            url="http://localhost:8003/v1/metrics/{}".format(name),
+            url="{}/v1/metrics/{}".format(self.tsdatastore, name),
             **params
         )
 
@@ -83,14 +84,15 @@ class Sax(Resource):
 
         return d.payload
 
+
 app = Flask(__name__)
 api = Api(app)
 CORS(app)
+api.add_resource(Sax, '/v1/sax/<name>')
 
 @app.errorhandler(InvalidUsage)
 def handle_invalid_usage(error):
+    # TODO - This is not catching errors
     response = jsonify(error.to_dict())
     response.status_code = error.status_code
     return response
-
-api.add_resource(Sax, '/v1/sax/<name>')
