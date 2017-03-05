@@ -6,7 +6,7 @@ MAINTAINER Tom Taylor <tom+dockerfiles@tomm.yt>
 RUN apt-get -qq update &&\
     DEBIAN_FRONTEND=noninteractive apt-get -yqq install \
       python3 python3-pip && \
-      pip3 install --upgrade pip && \
+      pip3 install --upgrade --no-cache-dir pip && \
     groupadd app && useradd -r -g app app
 
 # Service name and port to expose
@@ -15,7 +15,7 @@ ARG PORT
 
 # Install dependencies (xargs hack to force order)
 COPY services/${SERVICE}/requirements.txt /
-RUN xargs -L 1 pip install < /requirements.txt
+RUN xargs -L 1 pip --no-cache-dir install < /requirements.txt
 
 # Install service
 COPY services/${SERVICE} /opt/${SERVICE}

@@ -32,9 +32,11 @@ services:
     image: seismic/obsloader
     depends_on:
       - tsdatastore
+      - bootstrap
     ports:
       - 127.0.0.1:8164:8164
     environment:
+      - BROKER=redis://redis
       - LISTEN_PORT=8164
       - TSDATASTORE=http://tsdatastore:8163
 
@@ -62,7 +64,23 @@ services:
        - LISTEN_PORT=8165
        - TSDATASTORE=http://tsdatastore:8163
 
+  batch:
+    image: seismic/batch
+    depends_on:
+      - cassandra
+      - redis
+    environment:
+      - CASSANDRA=cassandra
+      - BROKER=redis://redis
+
   redis:
     image: redis:3.0
     ports:
       - 127.0.0.1:6379:6379
+
+  bootstrap:
+    image: seismic/bootstrap
+    depends_on:
+      - redis
+    environment:
+      - BROKER=redis://redis

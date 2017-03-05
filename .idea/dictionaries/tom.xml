@@ -2,9 +2,17 @@
   <dictionary name="tom">
     <words>
       <w>datapoints</w>
+      <w>datastore</w>
       <w>kairos</w>
       <w>keyspace</w>
+      <w>minio</w>
+      <w>miniseed</w>
+      <w>msgpack</w>
+      <w>ndarray</w>
+      <w>obspy</w>
+      <w>starttime</w>
       <w>tsdatastore</w>
+      <w>tsdb</w>
     </words>
   </dictionary>
 </component>

@@ -4,9 +4,12 @@ Exposed API for ObsLoader (Observation Loader)
 from io import BytesIO
 from os import getenv
 import requests
+import logging
+from logging import info
 from flask import Flask, jsonify, request
-from flask_restful import Resource, Api, reqparse
-from obsloader.obs import Observation, ObservationError
+from flask_restful import Resource, Api
+from celery import Celery
+from .obs import Observation, ObservationError
 
 
 class InvalidUsage(Exception):
@@ -33,10 +36,14 @@ class InvalidUsage(Exception):
 class Observations(Resource):
     """
     Observations endpoint for obsloader API.
+
+    Will add a job to ensure schema is created
     """
     def __init__(self):
         url = getenv('TSDATASTORE', "http://localhost:8163")
+        broker = getenv("BROKER", "redis://localhost")
         self.ds_url = "{}/v1/metrics".format(url)
+        self.queue = Celery("batch", broker=broker)
 
     def put(self):
         """
@@ -47,10 +54,23 @@ class Observations(Resource):
         try:
             data = BytesIO(request.get_data())
             o = Observation(path=data)
+            payload = o.as_tsdatastore_payload()
+            info("Payload: {}.{}.{} starting at {} at {}Hz and {} points.".format(
+                o.stats().network, o.stats().station, o.stats().channel,
+                payload['starttime'], o.stats().sampling_rate, len(payload['datapoints'])))
+
             r = requests.put(
                 url="{}/{}".format(self.ds_url, o.stats().channel),
-                json=o.as_tsdatastore_payload()
+                json=payload
             )
+            self.queue.send_task("batch.tasks.add_meta", args=(
+                o.stats().network,
+                o.stats().station,
+                o.stats().channel,
+                payload['starttime'],
+                payload['starttime'] + len(payload['datapoints']) * payload['interval'],
+                o.stats().sampling_rate
+            ))
             return None, r.status_code
         except ObservationError as e:
             print(e)
@@ -59,6 +79,9 @@ class Observations(Resource):
 
 app = Flask(__name__)
 api = Api(app)
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
 
 @app.errorhandler(InvalidUsage)
 def handle_invalid_usage(error):
