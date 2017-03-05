@@ -10,5 +10,5 @@ metadata = Metadata(hosts=cassandra)
 
 
 @app.task
-def update_meta(network, station, channel, start, end):
-    pass
+def add_meta(network, station, channel, start, end, sample_rate):
+    metadata.add_meta(network, station, channel, start, end, sample_rate)

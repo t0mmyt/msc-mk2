@@ -1,0 +1,8 @@
+minio
+crate
+msgpack-python
+gunicorn
+flask
+flask-appconfig>=0.10
+flask-api
+requests
