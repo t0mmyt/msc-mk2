@@ -1,5 +1,5 @@
 from minio import Minio, ResponseError
-
+from io import BytesIO
 
 class DatastoreError(Exception):
     pass
@@ -29,6 +29,6 @@ class Datastore(object):
 
     def get(self, name):
         try:
-            return self.m.get_object(bucket_name=self.bucket, object_name=name)
+            return BytesIO(self.m.get_object(bucket_name=self.bucket, object_name=name).read())
         except ResponseError as e:
             raise DatastoreError(e)

@@ -5,11 +5,13 @@ import logging
 from logging import info, debug, error
 # from os import getenv
 import msgpack
+import numpy as np
 from io import BytesIO
 from uuid import uuid4
-from payload import Payload, PayloadError
+from payload import PayloadFromImport, PayloadFromObject, PayloadError
 from datastore import Datastore, DatastoreError
 from metadata import Metadata, MetadataError
+from iso8601 import parse_date
 
 
 class InvalidUsage(Exception):
@@ -58,7 +60,7 @@ class Metric(Resource):
         packed = BytesIO(request.get_data())
         data = msgpack.unpack(packed, encoding='utf-8')
         try:
-            payload = Payload(data)
+            payload = PayloadFromImport(data)
             length, blob = payload.to_np_save()
             tags = payload.tags
             new_uuid = str(uuid4())
@@ -85,7 +87,37 @@ class Metric(Resource):
                     "{} is a required parameter and was missing.".format(p))
             else:
                 params[p] = request.args[p]
-        return self.metadata.list(**params)
+        object_list = self.metadata.list(**params)
+        new_datapoints = np.empty(0)
+
+        start = parse_date(params['start']).replace(tzinfo=None).timestamp() * 1000
+        end = parse_date(params['end']).replace(tzinfo=None).timestamp() * 1000
+
+        debug("Got object list: {}".format(object_list))
+        for o in object_list:
+            interval = 1000 / o[3]
+            debug("Interval: {}".format(interval))
+            p = PayloadFromObject(data=self.datastore.get(o[0]), meta={})
+            if o[1] < start:
+                start_i = int((start - o[1]) / interval) # start index
+                if o[2] < end:
+                    debug("Reading {} from {} to end".format(o[0], start_i))
+                    new_datapoints = np.append(new_datapoints, p.datapoints[start_i:])
+                else:
+                    # TODO - Out by 1?
+                    end_i = int((end - o[1]) / interval)
+                    debug("Reading {} from {} to {}".format(o[0], start_i, end_i))
+                    new_datapoints = np.append(new_datapoints, p.datapoints[start_i:end_i])
+            else: # o[1] >= start
+                if o[2] > end:
+                    debug("Reading {} from beginning to end".format(o[0], start_i))
+                    new_datapoints = np.append(new_datapoints, p.datapoints)
+                else:
+                    # TODO - Out by 1?
+                    end_i = int((end - o[1]) / interval)
+                    debug("Reading {} from beginning to {}".format(o[0], end_i))
+                    new_datapoints = np.append(new_datapoints, p.datapoints[:end_i])
+        return list(new_datapoints)
 
 
 app = Flask(__name__)

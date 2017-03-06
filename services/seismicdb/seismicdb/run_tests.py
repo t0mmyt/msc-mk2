@@ -2,6 +2,7 @@
 import obspy
 import msgpack
 import requests
+from iso8601 import parse_date
 from os import listdir, path
 
 
@@ -18,8 +19,8 @@ def upload(filename):
 
     test_payload = {
         'tags': tags,
-        'start': t.meta.starttime.timestamp * 1000,
-        'end': t.meta.endtime.timestamp * 1000,
+        'start': parse_date(str(t.meta.starttime)).replace(tzinfo=None).timestamp() * 1000,
+        'end': parse_date(str(t.meta.endtime)).replace(tzinfo=None).timestamp() * 1000,
         'interval': 1000 / t.meta.sampling_rate,
         'datapoints': t.data.tolist(),
     }

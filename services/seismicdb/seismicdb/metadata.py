@@ -56,6 +56,7 @@ class Metadata(object):
                   " AND channel = ?"
                   " AND (start_time <= ? AND end_time >= ?"
                   " OR start_time >= ? AND end_time <= ?"
-                  " OR start_time <= ? AND end_time >= ?)",
+                  " OR start_time <= ? AND end_time >= ?)"
+                  " ORDER BY start_time",
                   (network, station, channel, start, start, start, end, end, end))
         return c.fetchall()
